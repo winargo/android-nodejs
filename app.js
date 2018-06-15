@@ -18,7 +18,7 @@ var conn = mysql.createConnection({
 })
 
 app.get('/',function(req,res,next){
-      next();
+      res.send('server is active');
 })
 
 app.get('/allitem',function(req,res) {
@@ -35,7 +35,7 @@ app.get('/allitem',function(req,res) {
 app.get('/getitem/:name',function(req,res){
 
   var pemilik = req.params.name;
-  var sql = 'select * from cart where pemilik = ?';
+  var sql = 'select * from cart where pemilik = ? order by penjual_pemilik asc';
   conn.query(sql,pemilik,function(err,result){
     if(err)
       throw err
@@ -51,10 +51,29 @@ app.get('/insertitem',function(req,res){
   var stockid = req.query.stockid;
   var stock = req.query.jumlah;
   var penjual = req.query.penjual;
+  var imagedata = req.query.imagedata;
 
-  sql = 'insert into cart (pemilik,stock_id,jumlah,penjual_pemilik) values (?,?,?,?)';
+  sql = 'insert into cart (pemilik,stock_id,jumlah,penjual_pemilik,imagedata) values (?,?,?,?,?)';
 
-  conn.query(sql,[pemilik,stockid,stock,penjual],function(err,row){
+  conn.query(sql,[pemilik,stockid,stock,penjual,imagedata],function(err,row){
+    if(err)
+      throw err
+    else{
+      res.json(row);
+    }
+  })
+
+})
+
+app.get('/checkinsertitem',function(req,res){
+
+  var pemilik = req.query.pemilik;
+  var stockid = req.query.stockid;
+  var penjual = req.query.penjual;
+
+  sql = 'select * from cart where pemilik = ? and stock_id =? and penjual_pemilik=?';
+
+  conn.query(sql,[pemilik,stockid,penjual],function(err,row){
     if(err)
       throw err
     else{
@@ -78,12 +97,42 @@ app.get('/delitem',function(req,res){
   })
 })
 
-app.get('/updateitem',function(req,res){
+app.get('/additem',function(req,res){
   var pemilik = req.query.pemilik;
   var stockid = req.query.stockid;
   var jumlah  = req.query.jumlah;
   var penjual = req.query.penjual;
   sql = 'update cart set jumlah = ?  where pemilik = ? AND stock_id = ? AND penjual_pemilik = ?';
+  conn.query(sql,[jumlah,pemilik,stockid,penjual],function(err,row){
+    if(err)
+      throw(err)
+    else{
+      res.json(row);
+    }
+  })
+})
+
+app.get('/plusitem',function(req,res){
+  var pemilik = req.query.pemilik;
+  var stockid = req.query.stockid;
+  var jumlah  = req.query.jumlah;
+  var penjual = req.query.penjual;
+  sql = 'update cart set jumlah = ?+1  where pemilik = ? AND stock_id = ? AND penjual_pemilik = ?';
+  conn.query(sql,[jumlah,pemilik,stockid,penjual],function(err,row){
+    if(err)
+      throw(err)
+    else{
+      res.json(row);
+    }
+  })
+})
+
+app.get('/reduceitem',function(req,res){
+  var pemilik = req.query.pemilik;
+  var stockid = req.query.stockid;
+  var jumlah  = req.query.jumlah;
+  var penjual = req.query.penjual;
+  sql = 'update cart set jumlah = ?-1  where pemilik = ? AND stock_id = ? AND penjual_pemilik = ?';
   conn.query(sql,[jumlah,pemilik,stockid,penjual],function(err,row){
     if(err)
       throw(err)
