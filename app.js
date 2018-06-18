@@ -4,11 +4,13 @@ var bodyParser = require('body-parser')
 var app = express()
 var port = 3000
 
-var serviceAccount = require('./google-services.json');
-var admin = require('firebase-admin');
-var apps = admin.initializeApp({
+var admin = require("firebase-admin");
+
+var serviceAccount = require("service.json");
+
+admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: 'https://shopeef.firebaseio.com'
+  databaseURL: "https://shopeef-5eda6.firebaseio.com"
 });
 
 
@@ -32,7 +34,7 @@ app.get('/',function(req,res,next){
       res.send('server is active');
 })
 
-app.get('/:token',function(req,res,next){
+app.get('/token/:token',function(req,res,next){
   var registrationToken = req.params.token;
 
   // See documentation on defining a message payload.
