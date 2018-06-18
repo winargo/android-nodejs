@@ -4,6 +4,17 @@ var bodyParser = require('body-parser')
 var app = express()
 var port = 3000
 
+var serviceAccount = require('./google-services.json');
+var admin = require('firebase-admin');
+var apps = admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: 'https://shopeef.firebaseio.com'
+});
+
+
+
+
+
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }))
 // parse application/json
@@ -20,6 +31,33 @@ var conn = mysql.createConnection({
 app.get('/',function(req,res,next){
       res.send('server is active');
 })
+
+app.get('/:token',function(req,res,next){
+  var registrationToken = req.params.token;
+
+  // See documentation on defining a message payload.
+  var message = {
+    data: {
+      score: '850',
+      time: '2:45'
+    },
+    token: registrationToken
+  };
+
+  // Send a message to the device corresponding to the provided
+  // registration token.
+  admin.messaging().send(message)
+    .then((response) => {
+      // Response is a message ID string.
+      console.log('Successfully sent message:', response);
+    })
+    .catch((error) => {
+      console.log('Error sending message:', error);
+    });
+})
+
+// This registration token comes from the client FCM SDKs.
+
 
 app.get('/allitem',function(req,res) {
     var sql = 'select * from cart';
@@ -54,6 +92,26 @@ app.get('/insertitem',function(req,res){
   var imagedata = req.query.imagedata;
 
   sql = 'insert into cart (pemilik,stock_id,jumlah,penjual_pemilik,imagedata) values (?,?,?,?,?)';
+
+  conn.query(sql,[pemilik,stockid,stock,penjual,imagedata],function(err,row){
+    if(err)
+      throw err
+    else{
+      res.json(row);
+    }
+  })
+
+})
+
+app.get('/checkout',function(req,res){
+
+  var pemilik = req.query.pemilik;
+  var stockid = req.query.stockid;
+  var stock = req.query.jumlah;
+  var penjual = req.query.penjual;
+  var imagedata = req.query.imagedata;
+
+  sql = 'insert into order (order_id,pemilik,stock_id,jumlah,penjual_pemilik,imagedata) values (?,?,?,?,?)';
 
   conn.query(sql,[pemilik,stockid,stock,penjual,imagedata],function(err,row){
     if(err)
